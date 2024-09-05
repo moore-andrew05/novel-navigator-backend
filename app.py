@@ -1,24 +1,38 @@
-# React Backend
+import json
+from flask import jsonify
+from marshmallow import ValidationError
+from werkzeug.exceptions import HTTPException
+from backend.src import create_app
+from backend.src.interfaces.book_response import BookResponse
 
-import os
-from flask import Flask
-from flask_sqlalchemy import SQLAlchemy
+app = create_app()
+app.app_context().push()
 
 
-app = Flask(__name__)
-env_config = os.getenv('APP_SETTINGS', "config.DevelopmentConfig")
-app.config.from_object(env_config)
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+@app.errorhandler(404)
+def handle_not_found_error(error):
+    return BookResponse(False, "Request not found", None).to_json()
 
-db = SQLAlchemy(app)
 
-from db.models import *
+@app.errorhandler(HTTPException)
+def handle_exception(e):
+    response = e.get_response()
+    # replace the body with JSON
+    response.data = json.dumps(
+        {
+            "code": e.code,
+            "name": e.name,
+            "description": e.description,
+        }
+    )
+    response.content_type = "application/json"
+    return BookResponse(False, response, None).to_json()
 
-@app.route('/')
-def hello_world():
-    print("Hello World")
+
+@app.errorhandler(ValidationError)
+def handle_validation_error(error):
+    return BookResponse(False, jsonify(error.messages), None).to_json()
 
 
 if __name__ == "__main__":
-    app.run()
-
+    app.run(debug=True, port=5005, host="0.0.0.0")

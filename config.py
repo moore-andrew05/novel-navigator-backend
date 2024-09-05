@@ -1,24 +1,23 @@
-from dotenv import load_dotenv
-load_dotenv()
-
 import os
-basedir = os.path.abspath(os.path.dirname(__file__))
+from dotenv import load_dotenv
+from flask_sqlalchemy import SQLAlchemy
+from flask_marshmallow import Marshmallow
+from flask_migrate import Migrate
 
-print(basedir)
+db: SQLAlchemy = SQLAlchemy()
+ma: Marshmallow = Marshmallow()
+migrate: Migrate = Migrate()
 
-class Config(object):
-    DEBUG = False
-    DEVELOPMENT = False
+def init_env_vars(state):
+    load_dotenv()
+    if state == "LOCAL":
+        return {
+            "database_uri_full": os.environ.get("DATABASE_URL_LOCAL_FULL"),
+            "database_uri": os.environ.get("DATABASE_URL_LOCAL")
+        }
 
-    SQLALCHEMY_DATABASE_URI = \
-    f'postgresql://{os.environ['DATABASE_HOST']}:{os.environ['DATABASE_PORT']}'
-
-class ProductionConfig(Config):
-    pass
-
-class StagingConfig(Config):
-    DEBUG = True
-
-class DevelopmentConfig(Config):
-    DEBUG = True
-    DEVELOPMENT = True
+    else:
+        return {
+            "database_uri_full": os.environ.get("DATABASE_URL_FULL"),
+            "database_uri": os.environ.get("DATABASE_URL")
+        }
