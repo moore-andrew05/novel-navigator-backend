@@ -4,6 +4,9 @@
 ### Migrations ###
 migrations
 
+### DSStore ###
+.DS_Store
+
 
 ### Flask ###
 instance/*
